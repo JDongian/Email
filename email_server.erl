@@ -4,6 +4,7 @@
 -export([start_link/0]).
 -export([alloc/0, free/1]).
 -export([init/1, handle_call/3, handle_cast/2]).
+-export([code_change/3]).
 
 %
 % Implementations from
@@ -11,13 +12,13 @@
 %
 
 start_link() ->
-    gen_server:start_link({local, email_srv}, email_srv, [], []).
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 alloc() ->
-    gen_server:call(email_srv, alloc).
+    gen_server:call(?MODULE, alloc).
 
 free(Ch) ->
-    gen_server:cast(email_srv, {free, Ch}).
+    gen_server:cast(?MODULE, {free, Ch}).
 
 init(_Args) ->
     {ok, channels()}.
