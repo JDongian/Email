@@ -1,58 +1,37 @@
 -module(email_server).
 -behaviour(gen_server).
 
--export([start_link/0]).
--export([alloc/0, free/1]).
--export([init/1, handle_call/3, handle_cast/2]).
--export([code_change/3]).
+-export([start_link/0, init/1,
+         handle_call/3,
+         handle_cast/2, handle_info/2, terminate/2, code_change/3]).
+-export([start/0, stop/0]).
 
-%
-% Implementations from
 % http://www.erlang.org/doc/design_principles/gen_server_concepts.html
-%
 
-start_link() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-alloc() ->
-    gen_server:call(?MODULE, alloc).
+init([]) -> {ok, null}.
 
-free(Ch) ->
-    gen_server:cast(?MODULE, {free, Ch}).
 
-init(_Args) ->
-    {ok, channels()}.
+handle_call(stop, _From, State) ->
+    {stop, normal, stopped, State};
 
-handle_call(alloc, _From, Chs) ->
-    {Ch, Chs2} = alloc(Chs),
-    {reply, Ch, Chs2}.
+handle_call(_Request, _From, State) ->
+    Reply = null,
+    {reply, Reply, State}.
 
-handle_cast({free, Ch}, Chs) ->
-    Chs2 = free(Ch, Chs),
-    {noreply, Chs2}.
+handle_cast(_Msg, State) -> {noreply, State}.
 
-%
-% Copied from http://bytefilia.com/erlang-otp-gen_server-template-example/
-%
+handle_info(_Info, State) -> {noreply, State}.
 
-code_change(_OldVersion, _Server, _Extra) ->
-    {ok, _Server}.
+terminate(_Reason, _State) -> ok.
+
+code_change(_OldVer, State, _Extra) -> {ok, State}.
+
 
 %
-% Sample implementations from
-% http://www.erlang.org/doc/design_principles/des_princ.html#ch1
+% Interface routines
 %
 
-channels() ->
-   {_Allocated = [], _Free = lists:seq(1,100)}.
-
-alloc({Allocated, [H|T] = _Free}) ->
-   {H, {[H|Allocated], T}}.
-
-free(Ch, {Alloc, Free} = Channels) ->
-   case lists:member(Ch, Alloc) of
-      true ->
-         {lists:delete(Ch, Alloc), [Ch|Free]};
-      false ->
-         Channels
-   end. 
+start() -> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+stop() -> gen_server:call(?MODULE, stop).
